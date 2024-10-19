@@ -13,6 +13,7 @@ A powerful, yet easy-to-use Discord music bot built with `discord.py` and `yt-dl
 
 ## Installation (Docker)
 1. Clone repository
-2. Add your bot token into docker-compose.yml
-3. `docker-compose up -d --build`
-4. Yes, it's that easy!
+2. Copy the example docker-compose file `cp docker-compose.example docker-compose.yml`
+3. Add your bot token into docker-compose.yml
+4. `docker-compose up -d --build`
+5. Yes, it's that easy!
