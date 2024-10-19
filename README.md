@@ -1,4 +1,4 @@
-# Discord Music Bot 🎵
+# TuneBot 🎵
 
 A powerful, yet easy-to-use Discord music bot built with `discord.py` and `yt-dlp`. The bot can stream audio from YouTube, manage music queues, handle multiple guilds, and much more.
 
