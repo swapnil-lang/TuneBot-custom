@@ -1,0 +1,15 @@
+services:
+  discord-music-bot:
+    container_name: discord-music-bot
+    build: .
+    restart: unless-stopped
+    networks:
+      - apps
+    environment:
+      DISCORD_BOT_TOKEN: ""
+      DISCORD_PREFIX: "!"
+
+networks:
+  apps:
+    name: apps
+    external: true

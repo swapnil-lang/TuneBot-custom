@@ -1,0 +1,6 @@
+discord.py
+yt-dlp
+PyNaCl
+async-timeout
+ffmpeg-python
+python-dotenv
