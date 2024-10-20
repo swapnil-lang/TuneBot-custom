@@ -6,6 +6,17 @@ from discord.ext import commands
 from collections import deque
 from async_timeout import timeout
 
+def format_duration(duration):
+    """Formats duration in seconds to H:MM:SS or M:SS."""
+    if duration is None:
+        return "Unknown"
+    hours, remainder = divmod(int(duration), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours > 0:
+        return f"{hours}:{minutes:02d}:{seconds:02d}"
+    else:
+        return f"{minutes}:{seconds:02d}"
+
 class MusicBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
@@ -102,7 +113,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data=data
         )
 
-
 class Music(commands.Cog):
     """Music commands cog."""
     def __init__(self, bot):
@@ -114,7 +124,7 @@ class Music(commands.Cog):
             self.bot.music_queues[ctx.guild.id] = MusicQueue()
         return self.bot.music_queues[ctx.guild.id]
 
-    @commands.command(name='play', help='Plays a song from YouTube URL or search term')
+    @commands.command(name='play', aliases=['p'], help='Plays a song from YouTube URL or search term')
     async def play(self, ctx, *, query):
         """Play a song or add it to the queue."""
         if not ctx.author.voice:
@@ -133,9 +143,10 @@ class Music(commands.Cog):
                 
                 if ctx.voice_client.is_playing():
                     queue.queue.append(source)
+                    duration_str = format_duration(source.duration)
                     embed = discord.Embed(
                         title="Added to Queue",
-                        description=f"🎵 **{source.title}**\nBy: {source.uploader}",
+                        description=f"🎵 **{source.title}**\nBy: {source.uploader}\nDuration: {duration_str}",
                         color=discord.Color.green()
                     )
                     if source.thumbnail:
@@ -159,9 +170,10 @@ class Music(commands.Cog):
             )
         )
         
+        duration_str = format_duration(source.duration)
         embed = discord.Embed(
             title="Now Playing",
-            description=f"🎵 **{source.title}**\nBy: {source.uploader}",
+            description=f"🎵 **{source.title}**\nBy: {source.uploader}\nDuration: {duration_str}",
             color=discord.Color.blue()
         )
         if source.thumbnail:
@@ -173,7 +185,7 @@ class Music(commands.Cog):
         queue = await self.get_queue(ctx)
         
         if queue.loop and queue.current:
-            queue.queue.append(queue.current)
+            queue.queue.appendleft(queue.current)
             
         if queue.queue:
             next_song = queue.queue.popleft()
@@ -193,15 +205,16 @@ class Music(commands.Cog):
         )
         
         if queue.current:
+            duration_str = format_duration(queue.current.duration)
             embed.add_field(
                 name="Now Playing",
-                value=f"🎵 {queue.current.title}",
+                value=f"🎵 {queue.current.title} ({duration_str})",
                 inline=False
             )
             
         if queue.queue:
             queue_list = "\n".join(
-                f"{i+1}. {song.title}"
+                f"{i+1}. {song.title} ({format_duration(song.duration)})"
                 for i, song in enumerate(queue.queue)
             )
             embed.add_field(
@@ -225,9 +238,11 @@ class Music(commands.Cog):
         if not 0 <= volume <= 200:
             return await ctx.send("Volume must be between 0 and 200!")
             
-        if ctx.voice_client:
+        if ctx.voice_client and ctx.voice_client.source:
             ctx.voice_client.source.volume = volume / 100
             await ctx.send(f"Volume set to {volume}%")
+        else:
+            await ctx.send("Not playing any audio to adjust volume.")
 
     @commands.command(name='clear', help='Clears the queue')
     async def clear(self, ctx):
@@ -245,7 +260,7 @@ class Music(commands.Cog):
             ctx.voice_client.stop()
         await ctx.send("Stopped playing and cleared the queue.")
 
-    @commands.command(name='disconnect', help='Disconnects the bot')
+    @commands.command(name='disconnect', aliases=['dc'], help='Disconnects the bot')
     async def disconnect(self, ctx):
         """Disconnects the bot from voice."""
         if ctx.voice_client:
