@@ -8,6 +8,7 @@ A powerful, yet easy-to-use Discord music bot built with `discord.py` and `yt-dl
 - 🔁 Loop songs
 - 🔊 Adjust volume (0-200%)
 - 🛑 Stop and clear the queue
+- ⏭️ Skip current track 
 - ⏭ Auto-disconnect when everyone leaves the voice channel
 - 🛠 Simple and customizable help command
 
