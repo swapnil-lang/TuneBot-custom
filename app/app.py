@@ -268,6 +268,24 @@ class Music(commands.Cog):
             await ctx.voice_client.disconnect()
             await ctx.send("Disconnected from voice channel.")
 
+    @commands.command(name='skip', help='Skips the current song')
+    async def skip(self, ctx):
+        """Skips the current song."""
+        if not ctx.voice_client or not ctx.voice_client.is_playing():
+            return await ctx.send("No song is currently playing.")
+        
+        queue = await self.get_queue(ctx)
+
+        # Stop the current song
+        ctx.voice_client.stop()
+
+        # Check if there is a next song in the queue
+        if queue.queue:
+            await self.play_next(ctx)
+        else:
+            queue.current = None
+            await ctx.send("No more songs in the queue. Playback stopped.")
+
 def setup(bot):
     """Sets up the Music cog."""
     bot.add_cog(Music(bot))
