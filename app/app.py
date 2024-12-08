@@ -1,10 +1,9 @@
-import discord
-import os
-import yt_dlp
-import asyncio
-from discord.ext import commands
+import os, discord, yt_dlp, asyncio, spotipy
 from collections import deque
+from discord.ext import commands
+from spotipy.oauth2 import SpotifyClientCredentials
 from async_timeout import timeout
+from urllib.parse import urlparse
 
 def format_duration(duration):
     """Formats duration in seconds to H:MM:SS or M:SS."""
@@ -17,6 +16,72 @@ def format_duration(duration):
     else:
         return f"{minutes}:{seconds:02d}"
 
+class SpotifyClient:
+    """Handles Spotify API interactions."""
+    def __init__(self):
+        self.spotify = spotipy.Spotify(
+            client_credentials_manager=SpotifyClientCredentials(
+                client_id=os.environ['SPOTIFY_CLIENT_ID'],
+                client_secret=os.environ['SPOTIFY_CLIENT_SECRET']
+            )
+        )
+
+    def is_spotify_url(self, url: str) -> bool:
+        """Check if the URL is a Spotify URL."""
+        parsed = urlparse(url)
+        return parsed.hostname in ['open.spotify.com', 'play.spotify.com']
+
+    def get_track_info(self, url: str) -> dict:
+        """Get track information from Spotify URL."""
+        track = self.spotify.track(url)
+        return {
+            'title': track['name'],
+            'artist': track['artists'][0]['name'],
+            'album': track['album']['name']
+        }
+
+    def get_playlist_tracks(self, url: str) -> list:
+        """Get all tracks from a Spotify playlist."""
+        results = self.spotify.playlist_tracks(url)
+        tracks = []
+        
+        while results:
+            for item in results['items']:
+                track = item['track']
+                if track:
+                    tracks.append({
+                        'title': track['name'],
+                        'artist': track['artists'][0]['name'],
+                        'album': track['album']['name']
+                    })
+            
+            if results['next']:
+                results = self.spotify.next(results)
+            else:
+                break
+                
+        return tracks
+
+    def get_album_tracks(self, url: str) -> list:
+        """Get all tracks from a Spotify album."""
+        results = self.spotify.album_tracks(url)
+        tracks = []
+        
+        while results:
+            for track in results['items']:
+                tracks.append({
+                    'title': track['name'],
+                    'artist': track['artists'][0]['name'],
+                    'album': track['album']['name'] if 'album' in track else None
+                })
+            
+            if results['next']:
+                results = self.spotify.next(results)
+            else:
+                break
+                
+        return tracks
+
 class MusicBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
@@ -25,6 +90,7 @@ class MusicBot(commands.Bot):
         super().__init__(command_prefix=os.environ['DISCORD_PREFIX'], intents=intents)
         
         self.music_queues = {}
+        self.spotify_client = SpotifyClient()
         
     async def setup_hook(self):
         """Initialize bot settings on startup."""
@@ -46,6 +112,9 @@ class MusicBot(commands.Bot):
             if len(voice_channel.members) == 1 and voice_channel.members[0] == member.guild.voice_client.user:
                 await asyncio.sleep(5)
                 if len(voice_channel.members) == 1:
+                    if member.guild.id in self.music_queues:
+                        self.music_queues[member.guild.id].processing = False
+                        self.music_queues[member.guild.id].queue.clear()
                     await member.guild.voice_client.disconnect()
 
 class MusicQueue:
@@ -55,6 +124,7 @@ class MusicQueue:
         self.current = None
         self.loop = False
         self.volume = 1.0
+        self.processing = True
 
 class YTDLSource(discord.PCMVolumeTransformer):
     """Enhanced YouTube downloader with error handling and metadata."""
@@ -115,7 +185,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         )
 
 class Music(commands.Cog):
-    """Music commands cog."""
+    """Music commands cog with Spotify support."""
     def __init__(self, bot):
         self.bot = bot
         
@@ -125,14 +195,51 @@ class Music(commands.Cog):
             self.bot.music_queues[ctx.guild.id] = MusicQueue()
         return self.bot.music_queues[ctx.guild.id]
 
-    @commands.command(name='play', aliases=['p'], help='Plays a song from YouTube URL or search term')
+    async def process_spotify_url(self, ctx, url: str):
+        """Process Spotify URL and add tracks to queue."""
+        queue = await self.get_queue(ctx)
+        try:
+            if 'track' in url:
+                track_info = self.bot.spotify_client.get_track_info(url)
+                if queue.processing:
+                    await self.play(ctx, query=f"{track_info['title']} {track_info['artist']}")
+            
+            elif 'playlist' in url:
+                tracks = self.bot.spotify_client.get_playlist_tracks(url)
+                for track in tracks:
+                    if not queue.processing:
+                        await ctx.send("❌ Stopped processing remaining tracks in playlist.")
+                        break
+                    await self.play(ctx, query=f"{track['title']} {track['artist']}")
+            
+            elif 'album' in url:
+                tracks = self.bot.spotify_client.get_album_tracks(url)
+                for track in tracks:
+                    if not queue.processing:
+                        await ctx.send("❌ Stopped processing remaining tracks in album.")
+                        break
+                    await self.play(ctx, query=f"{track['title']} {track['artist']}")
+            
+            else:
+                await ctx.send("Invalid Spotify URL. Please provide a track, playlist, or album URL.")
+        
+        except Exception as e:
+            await ctx.send(f"Error processing Spotify URL: {str(e)}")
+
+    @commands.command(name='play', aliases=['p'], help='Plays a song from YouTube URL, Spotify URL, or search term')
     async def play(self, ctx, *, query):
         """Play a song or add it to the queue."""
         if not ctx.author.voice:
             return await ctx.send("You need to be in a voice channel!")
 
         queue = await self.get_queue(ctx)
-        
+        queue.processing = True  # Reset processing flag
+
+        # Check if the query is a Spotify URL
+        if self.bot.spotify_client.is_spotify_url(query):
+            await self.process_spotify_url(ctx, query)
+            return
+
         try:
             if not ctx.voice_client:
                 await ctx.author.voice.channel.connect()
@@ -254,19 +361,23 @@ class Music(commands.Cog):
 
     @commands.command(name='stop', help='Stops playing and clears the queue')
     async def stop(self, ctx):
-        """Stops playing and clears the queue."""
+        """Stops playing, clears the queue, and stops processing new additions."""
         queue = await self.get_queue(ctx)
+        queue.processing = False  # Stop processing new additions
         queue.queue.clear()
         if ctx.voice_client:
             ctx.voice_client.stop()
-        await ctx.send("Stopped playing and cleared the queue.")
+        await ctx.send("⏹️ Stopped playing and cleared the queue.")
 
     @commands.command(name='disconnect', aliases=['dc'], help='Disconnects the bot')
     async def disconnect(self, ctx):
-        """Disconnects the bot from voice."""
+        """Disconnects the bot from voice and halts all processing."""
+        queue = await self.get_queue(ctx)
+        queue.processing = False  # Stop processing new additions
+        queue.queue.clear()  # Clear the queue
         if ctx.voice_client:
             await ctx.voice_client.disconnect()
-            await ctx.send("Disconnected from voice channel.")
+            await ctx.send("👋 Disconnected from voice channel and cleared the queue.")
 
     @commands.command(name='skip', aliases=['s'], help='Skips the current song')
     async def skip(self, ctx):
@@ -285,6 +396,7 @@ class Music(commands.Cog):
         else:
             queue.current = None
             await ctx.send("No more songs in the queue. Playback stopped.")
+
 
 def setup(bot):
     """Sets up the Music cog."""
