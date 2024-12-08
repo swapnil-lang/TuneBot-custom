@@ -4,3 +4,4 @@ PyNaCl
 async-timeout
 ffmpeg-python
 python-dotenv
+spotipy
