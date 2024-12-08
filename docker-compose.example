@@ -6,3 +6,5 @@ services:
     environment:
       DISCORD_BOT_TOKEN: ""
       DISCORD_PREFIX: "!"
+      SPOTIFY_CLIENT_ID: ""
+      SPOTIFY_CLIENT_SECRET: ""
