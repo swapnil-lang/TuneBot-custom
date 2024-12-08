@@ -268,7 +268,7 @@ class Music(commands.Cog):
             await ctx.voice_client.disconnect()
             await ctx.send("Disconnected from voice channel.")
 
-    @commands.command(name='skip', help='Skips the current song')
+    @commands.command(name='skip', aliases=['s'], help='Skips the current song')
     async def skip(self, ctx):
         """Skips the current song."""
         if not ctx.voice_client or not ctx.voice_client.is_playing():
