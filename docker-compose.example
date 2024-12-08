@@ -1,6 +1,6 @@
 services:
-  discord-music-bot:
-    container_name: discord-music-bot
+  discord-tunebot:
+    container_name: discord-tunebot
     build: .
     restart: unless-stopped
     environment:

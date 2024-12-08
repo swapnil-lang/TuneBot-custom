@@ -15,13 +15,15 @@ A powerful Discord music bot with YouTube and Spotify support. Stream music from
 2. Create `docker-compose.yml`:
 ```yaml
 services:
-  tunebot:
+  discord-tunebot:
+    container_name: discord-tunebot
     build: .
+    restart: unless-stopped
     environment:
-      - DISCORD_BOT_TOKEN=your_bot_token
-      - DISCORD_PREFIX=!
-      - SPOTIFY_CLIENT_ID=your_spotify_client_id
-      - SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+      DISCORD_BOT_TOKEN: "your_bot_token"
+      DISCORD_PREFIX: "!"
+      SPOTIFY_CLIENT_ID: "your_spotify_client_id"
+      SPOTIFY_CLIENT_SECRET: "your_spotify_client_secret"
 ```
 3. Add your credentials:
    - Get Discord token from [Discord Developer Portal](https://discord.com/developers/applications)
