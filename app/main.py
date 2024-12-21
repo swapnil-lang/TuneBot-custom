@@ -53,11 +53,12 @@ class MusicBot(commands.Bot):
                 playback = (
                     f"`play` (`p`) • Play music or add to queue\n"
                     f"`playnext` (`pn`) • Add song to play next\n"
-                    f"`stop` (`ps`, `pause`) • Pause/Resume playback\n"
+                    f"`pause` • Pause playback\n"
+                    f"`resume` (`r`) • Resume playback\n"
                     f"`skip` (`s`) • Skip to next song\n"
                     f"`nowplaying` (`np`) • Show current song info\n"
                     f"`fast` (`f`, `ff`) • Skip ahead in current song\n"
-                    f"`disconnect` (`dis`) • Leave channel"
+                    f"`disconnect` (`dc`) • Leave channel"
                 )
                 embed.add_field(name="🎮 Music Controls", value=playback, inline=False)
 
