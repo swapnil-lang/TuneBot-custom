@@ -50,35 +50,42 @@ class MusicBot(commands.Bot):
                     color=discord.Color.blue()
                 )
 
-                playback = (
-                    f"`play` (`p`) • Play music or add to queue\n"
-                    f"`playnext` (`pn`) • Add song to play next\n"
-                    f"`pause` • Pause playback\n"
-                    f"`resume` (`r`) • Resume playback\n"
-                    f"`skip` (`s`) • Skip to next song\n"
-                    f"`nowplaying` (`np`) • Show current song info\n"
-                    f"`fast` (`f`, `ff`) • Skip ahead in current song\n"
-                    f"`disconnect` (`dc`) • Leave channel"
+                music_controls = (
+                    f"`play` (`p`) - Play music or add to queue\n"
+                    f"`playnext` (`pn`) - Add song to play next\n"
+                    f"`pause` - Pause playback\n"
+                    f"`resume` - Resume playback\n"
+                    f"`skip` (`s`) - Skip to next song\n"
+                    f"`nowplaying` (`np`) - Show current song info\n"
+                    f"`fastforward` (`ff`) - Skip ahead in current song (default 15 seconds)\n"
                 )
-                embed.add_field(name="🎮 Music Controls", value=playback, inline=False)
+                embed.add_field(name="Music Controls", value=music_controls, inline=False)
 
-                queue = (
-                    f"`queue` (`q`) • View current queue\n"
-                    f"`shuffle` (`sh`) • Randomize queue\n"
-                    f"`clear` (`c`) • Empty the queue\n"
-                    f"`playnum` (`ptn`) • Play specific song number\n"
-                    f"`repeat` (`r`) • Toggle queue loop"
+                queue_controls = (
+                    f"`queue` (`q`) - View current queue\n"
+                    f"`shuffle` (`sh`) - Randomize queue\n"
+                    f"`clear` (`c`) - Empty the queue\n"
+                    f"`playnum <number>` - Play specific song number\n"
+                    f"`repeat` (`r`) - Toggle queue loop"
+                    f"`remove` (`rm`)` - Remove specific song from queue, or all songs play a user"
                 )
-                embed.add_field(name="📋 Queue Controls", value=queue, inline=False)
+                embed.add_field(name="Queue Controls", value=queue_controls, inline=False)
+
+                system_controls = (
+                    f"`disconnect` (`dc`) - Leave channel\n",
+                    f"`help` (`h`) - Show help message"
+                )
+                embed.add_field(name="System Controls", value=system_controls, inline=False)
 
                 examples = (
-                    f"`{ctx.prefix}p never gonna give you up` • Search & play\n"
-                    f"`{ctx.prefix}p https://youtu.be/...` • Play URL\n"
-                    f"`{ctx.prefix}f` • Skip ahead 15 seconds\n"
-                    f"`{ctx.prefix}f 45` • Jump to 45 seconds\n"
-                    f"`{ctx.prefix}ptn 3` • Play queue item #3"
+                    f"`{ctx.prefix}p never gonna give you up` - Search & play\n"
+                    f"`{ctx.prefix}p https://youtu.be/...` - Play URL\n"
+                    f"`{ctx.prefix}ff 45` - Jump to 45 seconds\n"
+                    f"`{ctx.prefix}playnum 3` - Play queue item #3"
+                    f"`{ctx.prefix}rm 3` - Remove queue item #3"
+                    f"`{ctx.prefix}rm @user` - Remove all queue items by user"
                 )
-                embed.add_field(name="💡 Examples", value=examples, inline=False)
+                embed.add_field(name="Examples", value=examples, inline=False)
 
                 await ctx.send(embed=embed)
 
