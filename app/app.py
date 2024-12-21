@@ -106,16 +106,29 @@ class MusicBot(commands.Bot):
 
     async def on_voice_state_update(self, member, before, after):
         """Auto-disconnect when everyone leaves the voice channel."""
-        if member.guild.voice_client:
-            voice_channel = member.guild.voice_client.channel
-
-            if len(voice_channel.members) == 1 and voice_channel.members[0] == member.guild.voice_client.user:
-                await asyncio.sleep(5)
-                if len(voice_channel.members) == 1:
-                    if member.guild.id in self.music_queues:
-                        self.music_queues[member.guild.id].processing = False
-                        self.music_queues[member.guild.id].queue.clear()
-                    await member.guild.voice_client.disconnect()
+        if not member.guild.voice_client:
+            return
+        
+        voice_channel = member.guild.voice_client.channel
+        
+        # Count non-bot members in the channel
+        human_members = sum(1 for m in voice_channel.members if not m.bot)
+        
+        # If no human members remain
+        if human_members == 0:
+            await asyncio.sleep(5)  # Wait 5 seconds to confirm
+            
+            # Check again after delay
+            human_members = sum(1 for m in voice_channel.members if not m.bot)
+            if human_members == 0:
+                # Clean up queue
+                if member.guild.id in self.music_queues:
+                    self.music_queues[member.guild.id].processing = False
+                    self.music_queues[member.guild.id].queue.clear()
+                
+                # Disconnect
+                await member.guild.voice_client.disconnect()
+                logger.info(f"Bot disconnected from {voice_channel.name} due to inactivity")
 
 class MusicQueue:
     """Handles the music queue for a guild."""
