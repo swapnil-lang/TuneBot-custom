@@ -37,7 +37,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
     }
 
     @classmethod
-    async def create_source(cls, search: str, *, loop=None):
+    async def create_source(cls, search: str, *, loop=None, seek_seconds=0):
         """Creates a source from a YouTube URL or search term."""
         loop = loop or asyncio.get_event_loop()
         
@@ -51,8 +51,14 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 if 'entries' in data:
                     data = data['entries'][0]
 
+                # Modify FFMPEG options to include seeking if needed
+                ffmpeg_options = FFMPEG_OPTIONS.copy()
+                if seek_seconds > 0:
+                    ffmpeg_options['options'] = f'-ss {seek_seconds} ' + ffmpeg_options.get('options', '')
+
+
                 # Create source instance
-                audio = discord.FFmpegPCMAudio(data['url'], **FFMPEG_OPTIONS)
+                audio = discord.FFmpegPCMAudio(data['url'], **ffmpeg_options)
                 source = cls(audio, data=data, volume=0.5)
                 
                 # Get segments to skip

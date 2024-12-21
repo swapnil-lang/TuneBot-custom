@@ -171,6 +171,7 @@ class Music(commands.Cog):
             logger.error(f"Error processing Spotify URL: {e}", exc_info=True)
             await ctx.send("❌ Error processing Spotify URL")
 
+
     @commands.command(name='play', aliases=['p'])
     async def play(self, ctx, *, query=None):
         """Play a song, add to queue, or resume playback"""
@@ -181,15 +182,8 @@ class Music(commands.Cog):
         if not ctx.voice_client:
             await ctx.author.voice.channel.connect()
             
-        # If no query is provided, handle play/resume
         if not query:
-            if ctx.voice_client and ctx.voice_client.is_paused():
-                ctx.voice_client.resume()
-                return await ctx.send("▶️ Resuming playback!")
-            elif ctx.voice_client and ctx.voice_client.is_playing():
-                return await ctx.send("⏸️ Music is already playing!")
-            else:
-                return await ctx.send("❌ Nothing to resume! Use `..p <song>` to play something")
+            return await ctx.send("❌ No query provided.")
 
         try:
             # If query is provided, always try to add to queue or play
@@ -222,6 +216,89 @@ class Music(commands.Cog):
             logger.error(f"Error in play command: {str(e)}", exc_info=True)
             await ctx.send(f"❌ Failed to play: {type(e).__name__}")
 
+
+    @commands.command(name='playnext', aliases=['pn'])
+    async def playnext(self, ctx, *, query=None):
+        """Add a song to play next in the queue."""
+        if await self.handle_voice_error(ctx):
+            return
+            
+        # Connect to voice if not connected
+        if not ctx.voice_client:
+            await ctx.author.voice.channel.connect()
+
+        if not query:
+            return await ctx.send("❌ No query provided.")
+
+        try:
+            async with ctx.typing():
+                if self.bot.spotify_client.is_spotify_url(query):
+                    await ctx.send("❌ Playnext command doesn't support Spotify links! Use regular play instead.")
+                    return
+
+                source = await YTDLSource.create_source(query, loop=self.bot.loop)
+                source.requester = ctx.author
+                queue = await self.get_queue(ctx)
+                
+                if ctx.voice_client and ctx.voice_client.is_playing():
+                    # Add to front of queue if something is playing
+                    queue.queue.appendleft(source)
+                    duration_str = format_duration(source.duration)
+                    embed = discord.Embed(
+                        title="Added to Play Next",
+                        description=f"**{source.title}**\nBy: {source.uploader}\nDuration: {duration_str}",
+                        color=discord.Color.green()
+                    )
+                    embed.set_thumbnail(url=source.thumbnail)
+                    embed.set_footer(text=f"Requested by {ctx.author.display_name}")
+                    await ctx.send(embed=embed)
+                else:
+                    # Start playing if nothing is playing
+                    await self.player.play_song(ctx, source)
+                    
+        except Exception as e:
+            logger.error(f"Error in playnext command: {str(e)}", exc_info=True)
+            await ctx.send(f"❌ Failed to add song: {type(e).__name__}")
+
+
+    @commands.command(name='pause')
+    async def pause(self, ctx):
+        """Pause the current song."""
+        if await self.handle_voice_error(ctx):
+            return
+            
+        if not ctx.voice_client:
+            return await ctx.send("❌ Not connected to a voice channel!")
+            
+        if ctx.voice_client.is_paused():
+            return await ctx.send("⏸️ Music is already paused!")
+            
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.pause()
+            await ctx.send("⏸️ Playback paused!")
+        else:
+            await ctx.send("❌ Nothing is playing!")
+
+
+    @commands.command(name='resume')
+    async def resume(self, ctx):
+        """Resume the paused song."""
+        if await self.handle_voice_error(ctx):
+            return
+            
+        if not ctx.voice_client:
+            return await ctx.send("❌ Not connected to a voice channel!")
+            
+        if ctx.voice_client.is_playing():
+            return await ctx.send("▶️ Music is already playing!")
+            
+        if ctx.voice_client.is_paused():
+            ctx.voice_client.resume()
+            await ctx.send("▶️ Resuming playback!")
+        else:
+            await ctx.send("❌ Nothing to resume!")
+
+
     @commands.command(name='skip', aliases=['s'])
     async def skip(self, ctx):
         """Skip the current song."""
@@ -231,7 +308,7 @@ class Music(commands.Cog):
         queue = await self.get_queue(ctx)
         if not queue.queue:
             ctx.voice_client.stop()
-            return await ctx.send("Queue is empty!")
+            return await ctx.send("⏭️ Song skipped.")
             
         # Get next song info before stopping current
         next_song = queue.queue[0]
@@ -240,6 +317,75 @@ class Music(commands.Cog):
         # Stop current song (this will trigger play_next via the after callback)
         ctx.voice_client.stop()
         await ctx.send(f"⏭️ Skipping to **{next_song_name}**!")
+
+    
+    @commands.command(name='nowplaying', aliases=['np'])
+    async def nowplaying(self, ctx):
+        """Show information about the currently playing song."""
+        if not ctx.voice_client or not ctx.voice_client.is_playing():
+            return await ctx.send("❌ Nothing is playing right now!")
+
+        try:
+            # Get current track info from player
+            track_data = self.player.get_current_track()
+            if not track_data:
+                return await ctx.send("❌ No track information available!")
+
+            # Create and start the Now Playing view
+            from views.now_playing_view import NowPlayingView
+            
+            # Stop previous view if exists
+            if hasattr(self.bot, 'current_np_view') and self.bot.current_np_view:
+                self.bot.current_np_view.stop()
+                if hasattr(self.bot.current_np_view, 'message'):
+                    try:
+                        await self.bot.current_np_view.message.delete()
+                    except:
+                        pass
+
+            # Create new view
+            view = NowPlayingView(ctx, self.bot, track_data)
+            await view.start()
+
+        except Exception as e:
+            logger.error(f"Error in nowplaying command: {e}")
+            await ctx.send("❌ Error displaying now playing view")
+
+
+    @commands.command(name='fastforward', aliases=['ff'])
+    async def fastforward(self, ctx, seconds: int = 15):
+        """Skip ahead in the current song."""
+        if not ctx.voice_client or not ctx.voice_client.is_playing():
+            return await ctx.send("❌ No song is currently playing!")
+
+        try:
+            source = ctx.voice_client.source
+            if not hasattr(source, 'original') or not hasattr(source.original, 'url'):
+                return await ctx.send("❌ Cannot skip ahead in current track!")
+                
+            # Ensure seconds is within reasonable bounds
+            seconds = max(1, min(seconds, 300))  # Between 1 and 300 seconds
+
+            # Calculate new position
+            current_position = getattr(source, 'position', 0)
+            new_position = current_position + seconds
+            
+            # Create new source at new position
+            new_source = await YTDLSource.create_source(
+                source.original.url,
+                loop=self.bot.loop,
+                seek_seconds=new_position
+            )
+            
+            # Stop current playback and start at new position
+            ctx.voice_client.stop()
+            await self.player.play_song(ctx, new_source)
+            await ctx.send(f"⏩ Skipped ahead {seconds} seconds")
+            
+        except Exception as e:
+            logger.error(f"Error in skipahead command: {e}")
+            await ctx.send("❌ Failed to skip ahead")
+
 
     @commands.command(name='queue', aliases=['q'])
     async def queue(self, ctx):
@@ -250,6 +396,7 @@ class Music(commands.Cog):
             
         view = QueueView(ctx, self.bot)
         await view.show()
+
 
     @commands.command(name='shuffle', aliases=['sh'])
     async def shuffle(self, ctx):
@@ -299,17 +446,6 @@ class Music(commands.Cog):
             logger.error(f"Error in shuffle command: {e}")
             await ctx.send("❌ An error occurred while shuffling the queue")
 
-    @commands.command(name='pause')
-    async def stop(self, ctx):
-        """Pause the current song."""
-        if await self.handle_voice_error(ctx):
-            return
-            
-        if ctx.voice_client and ctx.voice_client.is_playing():
-            ctx.voice_client.pause()
-            await ctx.send("⏸️ Playback paused!")
-        else:
-            await ctx.send("❌ Nothing is playing!")
 
     @commands.command(name='clear', aliases=['c'])
     async def clear(self, ctx):
@@ -342,55 +478,6 @@ class Music(commands.Cog):
             await confirm_msg.delete()
             await ctx.send("⏱️ Queue clear operation timed out.")
 
-    @commands.command(name='disconnect', aliases=['dc'])
-    async def disconnect(self, ctx):
-        """Disconnect the bot from voice."""
-        if ctx.voice_client:
-            await ctx.voice_client.disconnect()
-            await ctx.send("👋 Disconnected from voice channel!")
-        else:
-            await ctx.send("❌ Not connected to any voice channel!")
-
-    @commands.command(name='repeat', aliases=['r'])
-    async def repeat(self, ctx):
-        """Toggle repeat mode for the queue."""
-        queue = await self.get_queue(ctx)
-        queue.loop = not queue.loop
-        
-        if queue.loop:
-            await ctx.send("🔁 Repeat mode enabled - Queue will loop")
-        else:
-            await ctx.send("➡️ Repeat mode disabled")
-
-    @commands.command(name='fastforward', aliases=['ff'])
-    async def fastforward(self, ctx, seconds: int = 15):
-        """Skip ahead in the current song."""
-        if not ctx.voice_client or not ctx.voice_client.is_playing():
-            return await ctx.send("❌ No song is currently playing!")
-
-        try:
-            source = ctx.voice_client.source
-            if not hasattr(source, 'original') or not hasattr(source.original, 'url'):
-                return await ctx.send("❌ Cannot skip ahead in current track!")
-                
-            # Ensure seconds is within reasonable bounds
-            seconds = max(1, min(seconds, 300))  # Between 1 and 300 seconds
-            
-            # Create new source at new position
-            new_source = await YTDLSource.create_source(
-                source.original.url,  # Use the original webpage URL
-                loop=self.bot.loop,
-                start_time=seconds
-            )
-            
-            # Stop current playback and start at new position
-            ctx.voice_client.stop()
-            await self.player.play_song(ctx, new_source)
-            await ctx.send(f"⏩ Skipped ahead {seconds} seconds")
-            
-        except Exception as e:
-            logger.error(f"Error in skipahead command: {e}")
-            await ctx.send("❌ Failed to skip ahead")
 
     @commands.command(name='playnum')
     async def playnum(self, ctx, num: int):
@@ -419,54 +506,18 @@ class Music(commands.Cog):
         await ctx.send(f"⏭️ Skipping to **{song_name}**...")
         await self.skip(ctx)
 
-    @commands.command(name='nowplaying', aliases=['np'])
-    async def nowplaying(self, ctx):
-        """Show information about the currently playing song."""
-        if not ctx.voice_client or not ctx.voice_client.is_playing():
-            return await ctx.send("❌ Nothing is playing right now!")
 
-        try:
-            # Get current track info from player
-            track_data = self.player.get_current_track()
-            if not track_data:
-                return await ctx.send("❌ No track information available!")
+    @commands.command(name='repeat', aliases=['r'])
+    async def repeat(self, ctx):
+        """Toggle repeat mode for the queue."""
+        queue = await self.get_queue(ctx)
+        queue.loop = not queue.loop
+        
+        if queue.loop:
+            await ctx.send("🔁 Repeat mode enabled - Queue will loop")
+        else:
+            await ctx.send("➡️ Repeat mode disabled")
 
-            # Create and start the Now Playing view
-            from views.now_playing_view import NowPlayingView
-            
-            # Stop previous view if exists
-            if hasattr(self.bot, 'current_np_view') and self.bot.current_np_view:
-                self.bot.current_np_view.stop()
-                if hasattr(self.bot.current_np_view, 'message'):
-                    try:
-                        await self.bot.current_np_view.message.delete()
-                    except:
-                        pass
-
-            # Create new view
-            view = NowPlayingView(ctx, self.bot, track_data)
-            await view.start()
-
-        except Exception as e:
-            logger.error(f"Error in nowplaying command: {e}")
-            await ctx.send("❌ Error displaying now playing view")
-
-    async def play_song(self, ctx, source):
-        """Play a song and show now playing."""
-        try:
-            # Stop any existing now playing view
-            if hasattr(self.bot, 'current_np_view'):
-                try:
-                    self.bot.current_np_view.stop()
-                except:
-                    pass
-
-            # Play the song
-            await self.player.play_song(ctx, source)
-
-        except Exception as e:
-            logger.error(f"Error in play_song: {e}")
-            await ctx.send("❌ Error playing song")
 
     @commands.command(name='remove', aliases=['rm'])
     async def remove(self, ctx, *, target):
@@ -536,3 +587,13 @@ class Music(commands.Cog):
                     await ctx.send(f"❌ Please enter a number between 1 and {len(queue.queue)}")
             except ValueError:
                 await ctx.send("❌ Please specify a valid number or @mention a user")
+
+
+    @commands.command(name='disconnect', aliases=['dc'])
+    async def disconnect(self, ctx):
+        """Disconnect the bot from voice."""
+        if ctx.voice_client:
+            await ctx.voice_client.disconnect()
+            await ctx.send("👋 Disconnected from voice channel!")
+        else:
+            await ctx.send("❌ Not connected to any voice channel!")
