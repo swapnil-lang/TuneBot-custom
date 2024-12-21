@@ -26,17 +26,24 @@ class Music(commands.Cog):
         
         # Define commands with their aliases
         self.command_list = {
+            # Music controls
             'play': ['p'],
-            'playnum': ['ptn'],
-            'queue': ['q'],
-            'shuffle': ['sh'],
-            'skip': ['s'],
+            'playnext': ['pn'],
             'pause': [],
             'resume': [],
-            'clear': [],
-            'disconnect': ['dc'],
+            'skip': ['s'],
+            'nowplaying': ['np'],
+            'fastforward': ['ff'],
+            # Queue controls
+            'queue': ['q'],
+            'shuffle': ['sh'],
+            'clear': ['c'],
+            'playnum': [],
             'repeat': ['r'],
-            'remove': ['rm']
+            'remove': ['rm'],
+            # System controls
+            'disconnect': ['dc'],
+            'help': ['h'],
         }
         
         # Create valid_commands list from command_list
@@ -292,7 +299,7 @@ class Music(commands.Cog):
             logger.error(f"Error in shuffle command: {e}")
             await ctx.send("❌ An error occurred while shuffling the queue")
 
-    @commands.command(name='pause', aliases=['p'])
+    @commands.command(name='pause')
     async def stop(self, ctx):
         """Pause the current song."""
         if await self.handle_voice_error(ctx):
@@ -355,8 +362,8 @@ class Music(commands.Cog):
         else:
             await ctx.send("➡️ Repeat mode disabled")
 
-    @commands.command(name='skipahead', aliases=['sa'])
-    async def skipahead(self, ctx, seconds: int = 15):
+    @commands.command(name='fastforward', aliases=['ff'])
+    async def fastforward(self, ctx, seconds: int = 15):
         """Skip ahead in the current song."""
         if not ctx.voice_client or not ctx.voice_client.is_playing():
             return await ctx.send("❌ No song is currently playing!")
@@ -385,7 +392,7 @@ class Music(commands.Cog):
             logger.error(f"Error in skipahead command: {e}")
             await ctx.send("❌ Failed to skip ahead")
 
-    @commands.command(name='playnum', aliases=['ptn'])
+    @commands.command(name='playnum')
     async def playnum(self, ctx, num: int):
         """Play a specific song from the queue."""
         if await self.handle_voice_error(ctx):
