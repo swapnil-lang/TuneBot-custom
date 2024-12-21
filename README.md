@@ -22,7 +22,6 @@ A Discord music bot with advanced playback controls and Spotify integration.
 - `resume` - Resume playback
 - `skip` (`s`) - Skip to next song
 - `nowplaying` (`np`) - Show current song info
-- `fastforward` (`ff`) - Skip ahead in current song (default 15 seconds)
 
 ### Queue Controls
 - `queue` (`q`) - View current queue

@@ -352,41 +352,6 @@ class Music(commands.Cog):
             await ctx.send("❌ Error displaying now playing view")
 
 
-    @commands.command(name='fastforward', aliases=['ff'])
-    async def fastforward(self, ctx, seconds: int = 15):
-        """Skip ahead in the current song."""
-        if not ctx.voice_client or not ctx.voice_client.is_playing():
-            return await ctx.send("❌ No song is currently playing!")
-
-        try:
-            source = ctx.voice_client.source
-            if not hasattr(source, 'original') or not hasattr(source.original, 'url'):
-                return await ctx.send("❌ Cannot skip ahead in current track!")
-                
-            # Ensure seconds is within reasonable bounds
-            seconds = max(1, min(seconds, 300))  # Between 1 and 300 seconds
-
-            # Calculate new position
-            current_position = getattr(source, 'position', 0)
-            new_position = current_position + seconds
-            
-            # Create new source at new position
-            new_source = await YTDLSource.create_source(
-                source.original.url,
-                loop=self.bot.loop,
-                seek_seconds=new_position
-            )
-            
-            # Stop current playback and start at new position
-            ctx.voice_client.stop()
-            await self.player.play_song(ctx, new_source)
-            await ctx.send(f"⏩ Skipped ahead {seconds} seconds")
-            
-        except Exception as e:
-            logger.error(f"Error in skipahead command: {e}")
-            await ctx.send("❌ Failed to skip ahead")
-
-
     @commands.command(name='queue', aliases=['q'])
     async def queue(self, ctx):
         """Display the current queue."""

@@ -57,7 +57,6 @@ class MusicBot(commands.Bot):
                     f"`resume` - Resume playback\n"
                     f"`skip` (`s`) - Skip to next song\n"
                     f"`nowplaying` (`np`) - Show current song info\n"
-                    f"`fastforward` (`ff`) - Skip ahead in current song (default 15 seconds)\n"
                 )
                 embed.add_field(name="Music Controls", value=music_controls, inline=False)
 
