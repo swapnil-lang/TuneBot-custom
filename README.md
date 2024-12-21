@@ -16,28 +16,26 @@ A Discord music bot with advanced playback controls and Spotify integration.
 ## Features
 
 ### Music Controls
-- `..play` or `..p` or `..pl` - Play a song from YouTube or Spotify
-- `..queue` or `..q` - Show current queue
-- `..skip` or `..s` or `..sk` - Skip current song
-- `..stop` - Stop playback and clear queue
-- `..pause`, `..resume` - Control playback
-- `..volume <0-100>` or `..v` - Adjust volume
-- `..nowplaying` or `..np` - Show current song info
-- `..playnum <number>` or `..ptn` - Play specific song from queue
-- `..shuffle` or `..sh` - Shuffle the queue
+- `play` or `p` - Play a song from YouTube or Spotify
+- `queue` or `q` - Show current queue
+- `skip` or `s` - Skip current song
+- `stop` - Stop playback and clear queue
+- `pause`, `resume` - Control playback
+- `nowplaying` or `np` - Show current song info
+- `playnum <number>` or `ptn` - Play specific song from queue
+- `shuffle` or `sh` - Shuffle the queue
 
 ### Queue Management
-- `..clear` - Clear the queue
-- `..remove <number>` or `..rm` - Remove specific song from queue
-- `..remove @user` or `..rm @user` - Remove all songs by a user
-- `..move <from> <to>` or `..mv` - Move song in queue
-- `..loop` or `..lp` - Toggle queue loop
+- `clear` - Clear the queue
+- `remove <number>` or `rm` - Remove specific song from queue
+- `remove @user` or `rm @user` - Remove all songs by a user
+- `move <from> <to>` or `mv` - Move song in queue
+- `loop` - Toggle queue loop
 
 ### System Commands
-- `..join` - Join your voice channel
-- `..leave` or `..le` or `..dis` or `..disconnect` - Leave voice channel
-- `..ping` or `..pg` - Check bot latency
-- `..help` or `..h` - Show help message
+- `disconnect` or `d` - Leave voice channel
+- `ping` - Check bot latency
+- `help` - Show help message
 
 ### Spotify Integration
 - Support for Spotify tracks and playlists
@@ -45,7 +43,6 @@ A Discord music bot with advanced playback controls and Spotify integration.
 - Queue management for playlists
 
 ## Technical Details
-
 - Uses discord.py for Discord integration
 - yt-dlp for YouTube downloads
 - FFmpeg for audio processing
