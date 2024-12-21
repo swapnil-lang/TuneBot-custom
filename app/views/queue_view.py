@@ -1,9 +1,6 @@
 import discord
 import math
 from utils.format import format_duration
-import logging
-
-logger = logging.getLogger('queue.view')
 
 class QueueView(discord.ui.View):
     def __init__(self, ctx, bot):

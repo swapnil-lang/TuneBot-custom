@@ -9,13 +9,9 @@ from models.music_player import MusicPlayer
 from views.queue_view import QueueView
 from utils.format import format_duration
 import asyncio
-import time
 from collections import deque
 
-# Configure logging
-logger = logging.getLogger('music.cog')
-log_level = logging.DEBUG if os.getenv('VERBOSE_OUTPUT', 'false').lower() == 'true' else logging.INFO
-logger.setLevel(log_level)
+logging.basicConfig(level=logging.ERROR)
 
 class Music(commands.Cog):
     def __init__(self, bot):
@@ -151,7 +147,7 @@ class Music(commands.Cog):
                             source.requester = ctx.author
                             await self.player.play_song(ctx, source)
                         except Exception as e:
-                            logger.error(f"Error processing first track: {e}")
+                            logging.error(f"Error processing first track: {e}")
                             await ctx.send("❌ Error processing first track")
                             return
                     else:
@@ -168,7 +164,7 @@ class Music(commands.Cog):
                         await ctx.send(f"✅ Added {len(tracks)-1} more tracks to queue")
                     
         except Exception as e:
-            logger.error(f"Error processing Spotify URL: {e}", exc_info=True)
+            logging.error(f"Error processing Spotify URL: {e}", exc_info=True)
             await ctx.send("❌ Error processing Spotify URL")
 
 
@@ -213,7 +209,7 @@ class Music(commands.Cog):
                     await self.player.play_song(ctx, source)
                     
         except Exception as e:
-            logger.error(f"Error in play command: {str(e)}", exc_info=True)
+            logging.error(f"Error in play command: {str(e)}", exc_info=True)
             await ctx.send(f"❌ Failed to play: {type(e).__name__}")
 
 
@@ -257,7 +253,7 @@ class Music(commands.Cog):
                     await self.player.play_song(ctx, source)
                     
         except Exception as e:
-            logger.error(f"Error in playnext command: {str(e)}", exc_info=True)
+            logging.error(f"Error in playnext command: {str(e)}", exc_info=True)
             await ctx.send(f"❌ Failed to add song: {type(e).__name__}")
 
 
@@ -348,7 +344,7 @@ class Music(commands.Cog):
             await view.start()
 
         except Exception as e:
-            logger.error(f"Error in nowplaying command: {e}")
+            logging.error(f"Error in nowplaying command: {e}")
             await ctx.send("❌ Error displaying now playing view")
 
 
@@ -408,7 +404,7 @@ class Music(commands.Cog):
             await ctx.send(f"🔀 Successfully shuffled {len(shuffled_tracks)} tracks!")
             
         except Exception as e:
-            logger.error(f"Error in shuffle command: {e}")
+            logging.error(f"Error in shuffle command: {e}")
             await ctx.send("❌ An error occurred while shuffling the queue")
 
 

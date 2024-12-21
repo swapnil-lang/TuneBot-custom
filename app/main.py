@@ -1,13 +1,11 @@
 import os
 import discord
 import asyncio
+import logging
 from discord.ext import commands
 from models.spotify_client import SpotifyClient
 
-# Configure logging
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('discord')
+logging.basicConfig(level=logging.ERROR)
 
 class MusicBot(commands.Bot):
     def __init__(self):
@@ -32,14 +30,11 @@ class MusicBot(commands.Bot):
         """Initialize cogs and configurations."""
         if self._initialized:
             return
-            
-        print("\n✅ Bot Initialization")
         
         try:
             # Load music cog
             from cogs.music import Music
             await self.add_cog(Music(self))
-            print("✅ Commands")
 
             # Register help command
             @self.command(name='help', aliases=['h'])
@@ -88,16 +83,11 @@ class MusicBot(commands.Bot):
 
                 await ctx.send(embed=embed)
 
-            if self.spotify_client.check_connection():
-                print("✅ Spotify")
-            else:
-                print("❌ Spotify")
-
-            print("✅ Ready")
+            logging.info("Bot Initialized")
             self._initialized = True
 
         except Exception as e:
-            print("❌ Failed to load commands")
+            logging.error("Failed to load commands")
             raise e
     
     async def on_ready(self):
@@ -132,9 +122,9 @@ async def main():
     try:
         await bot.start(token)
     except KeyboardInterrupt:
-        print("\nShutdown requested...")
+        logging.info("\nShutdown requested...")
     except Exception as e:
-        print(f"\nUnexpected error: {e}")
+        logging.error(f"\nUnexpected error: {e}")
     finally:
         if not bot.is_closed():
             await bot.close()

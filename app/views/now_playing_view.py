@@ -1,12 +1,12 @@
 import discord
 import asyncio
-import random
 import time
-from datetime import datetime
-import math
-from utils.format import format_duration
 import logging
-logger = logging.getLogger('now_playing.view')
+import math
+from datetime import datetime
+from utils.format import format_duration
+
+logging.basicConfig(level=logging.ERROR)
 
 class NowPlayingView:
     def __init__(self, ctx, bot, track_info):
@@ -118,7 +118,7 @@ class NowPlayingView:
                     }
             return None
         except Exception as e:
-            logger.error(f"Error getting next track info: {e}")
+            logging.error(f"Error getting next track info: {e}")
             return None
 
     def get_embed(self):
@@ -215,7 +215,7 @@ class NowPlayingView:
             return embed
 
         except Exception as e:
-            logger.error(f"Error creating embed: {e}")
+            logging.error(f"Error creating embed: {e}")
             return None
 
     async def update_position(self):
@@ -247,7 +247,7 @@ class NowPlayingView:
             return True
 
         except Exception as e:
-            logger.error(f"Error updating position: {e}")
+            logging.error(f"Error updating position: {e}")
             return False
 
     async def start(self):
@@ -291,11 +291,11 @@ class NowPlayingView:
                 except discord.HTTPException:
                     await asyncio.sleep(4)  # Rate limit
                 except Exception as e:
-                    logger.error(f"Error updating now playing view: {e}")
+                    logging.error(f"Error updating now playing view: {e}")
                     break
 
         except Exception as e:
-            logger.error(f"Failed to start now playing view: {e}")
+            logging.error(f"Failed to start now playing view: {e}")
             await self.ctx.send("❌ Failed to display now playing view")
             self.stop()
 

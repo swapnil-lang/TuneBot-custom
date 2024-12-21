@@ -5,7 +5,7 @@ from models.yt_source import YTDLSource, FFMPEG_OPTIONS
 from utils.format import format_duration
 import time
 
-logger = logging.getLogger('music.player')
+logging.basicConfig(level=logging.ERROR)
 
 class MusicPlayer:
     def __init__(self, bot):
@@ -42,7 +42,7 @@ class MusicPlayer:
             self._position = 0
             
         except Exception as e:
-            logger.error(f"Error storing track info: {e}")
+            logging.error(f"Error storing track info: {e}")
             self._current = None
 
     def get_current_track(self):
@@ -62,7 +62,7 @@ class MusicPlayer:
             return self._current
             
         except Exception as e:
-            logger.error(f"Error getting current track: {e}")
+            logging.error(f"Error getting current track: {e}")
             return self._current
 
     async def process_spotify_playlist(self, tracks, ctx):
@@ -117,7 +117,7 @@ class MusicPlayer:
             await self.play_song(ctx, source)
 
         except Exception as e:
-            logger.error(f"Error in play_next: {e}")
+            logging.error(f"Error in play_next: {e}")
             await ctx.send("❌ Error playing next song")
             # Try next song
             if queue and queue.queue:
@@ -158,7 +158,7 @@ class MusicPlayer:
                     await view.start()
 
         except Exception as e:
-            logger.error(f"Error in play_song: {e}")
+            logging.error(f"Error in play_song: {e}")
             await ctx.send("❌ Error playing song")
 
     def get_current_source(self):

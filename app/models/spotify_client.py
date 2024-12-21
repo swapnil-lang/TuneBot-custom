@@ -4,7 +4,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from urllib.parse import urlparse
 import logging
 
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.ERROR)
 
 class SpotifyClient:
     """Handles Spotify API interactions."""
@@ -13,12 +13,12 @@ class SpotifyClient:
         self.client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
         self.spotify = None
         if not self._initialize():
-            logger.error("Failed to initialize Spotify client")
+            logging.error("Failed to initialize Spotify client")
 
     def _initialize(self):
         """Initialize the Spotify client."""
         if not self.client_id or not self.client_secret:
-            logger.error("Missing Spotify credentials")
+            logging.error("Missing Spotify credentials")
             return False
             
         try:
@@ -31,7 +31,7 @@ class SpotifyClient:
             self.spotify.user('spotify')  # Simple API call to verify connection
             return True
         except Exception as e:
-            logger.error(f"Failed to initialize Spotify client: {e}")
+            logging.error(f"Failed to initialize Spotify client: {e}")
             self.spotify = None
             return False
 
@@ -111,5 +111,3 @@ class SpotifyClient:
                 break
                 
         return tracks
-
-    # ... (rest of Spotify methods) 

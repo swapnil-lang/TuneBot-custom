@@ -2,7 +2,7 @@ import sponsorblock as sb
 import logging
 from urllib.parse import urlparse, parse_qs
 
-logger = logging.getLogger('sponsorblock')
+logging.basicConfig(level=logging.ERROR)
 
 class SponsorBlockHandler:
     def __init__(self):
@@ -33,7 +33,7 @@ class SponsorBlockHandler:
                 if parsed.path[:3] == '/v/':
                     return parsed.path.split('/')[2]
         except Exception as e:
-            logger.error(f"Error extracting video ID: {e}")
+            logging.error(f"Error extracting video ID: {e}")
         return None
 
     async def get_skip_segments(self, url):
@@ -51,16 +51,10 @@ class SponsorBlockHandler:
             # Sort segments by start time
             segments = sorted(segments, key=lambda x: x.start_time)
             
-            # Log found segments
-            if segments:
-                logger.info(f"Found {len(segments)} segments to skip")
-                for seg in segments:
-                    logger.info(f"Will skip {seg.category} from {seg.start_time:.1f}s to {seg.end_time:.1f}s")
-            
             return segments
 
         except Exception as e:
-            logger.error(f"Error getting skip segments: {e}")
+            logging.error(f"Error getting skip segments: {e}")
             return []
 
     def get_current_segment(self, segments, current_time):
