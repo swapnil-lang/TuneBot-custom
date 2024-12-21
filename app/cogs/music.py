@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import random
 import logging
-import os
 from models.music_queue import MusicQueue
 from models.yt_source import YTDLSource
 from models.music_player import MusicPlayer
