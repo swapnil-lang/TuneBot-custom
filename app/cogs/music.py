@@ -28,7 +28,6 @@ class Music(commands.Cog):
             'resume': [],
             'skip': ['s'],
             'nowplaying': ['np'],
-            'fastforward': ['ff'],
             # Queue controls
             'queue': ['q'],
             'shuffle': ['sh'],
