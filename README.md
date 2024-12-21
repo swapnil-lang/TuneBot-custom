@@ -19,21 +19,20 @@ A Discord music bot with advanced playback controls and Spotify integration.
 - `play` or `p` - Play a song from YouTube or Spotify
 - `queue` or `q` - Show current queue
 - `skip` or `s` - Skip current song
-- `stop` - Stop playback and clear queue
 - `pause`, `resume` - Control playback
 - `nowplaying` or `np` - Show current song info
-- `playnum <number>` or `ptn` - Play specific song from queue
 - `shuffle` or `sh` - Shuffle the queue
 
 ### Queue Management
 - `clear` - Clear the queue
+- `playnum <number>` or `ptn` - Play specific song from queue
 - `remove <number>` or `rm` - Remove specific song from queue
 - `remove @user` or `rm @user` - Remove all songs by a user
 - `move <from> <to>` or `mv` - Move song in queue
 - `loop` - Toggle queue loop
 
 ### System Commands
-- `disconnect` or `d` - Leave voice channel
+- `disconnect` or `dc` - Leave voice channel
 - `ping` - Check bot latency
 - `help` - Show help message
 

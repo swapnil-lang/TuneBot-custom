@@ -26,16 +26,15 @@ class Music(commands.Cog):
         
         # Define commands with their aliases
         self.command_list = {
-            'play': ['p', 'pl'],
-            'playnext': ['pn'],
+            'play': ['p'],
             'playnum': ['ptn'],
             'queue': ['q'],
             'shuffle': ['sh'],
-            'skip': ['s', 'sk'],
-            'skipahead': ['sa'],
-            'stop': ['pause', 'ps'],
-            'clear': ['c'],
-            'disconnect': ['dis', 'leave'],
+            'skip': ['s'],
+            'pause': [],
+            'resume': [],
+            'clear': [],
+            'disconnect': ['dc'],
             'repeat': ['r'],
             'remove': ['rm']
         }
@@ -293,7 +292,7 @@ class Music(commands.Cog):
             logger.error(f"Error in shuffle command: {e}")
             await ctx.send("❌ An error occurred while shuffling the queue")
 
-    @commands.command(name='stop', aliases=['pause', 'ps'])
+    @commands.command(name='pause', aliases=['p'])
     async def stop(self, ctx):
         """Pause the current song."""
         if await self.handle_voice_error(ctx):
@@ -336,7 +335,7 @@ class Music(commands.Cog):
             await confirm_msg.delete()
             await ctx.send("⏱️ Queue clear operation timed out.")
 
-    @commands.command(name='disconnect', aliases=['dis', 'leave'])
+    @commands.command(name='disconnect', aliases=['dc'])
     async def disconnect(self, ctx):
         """Disconnect the bot from voice."""
         if ctx.voice_client:

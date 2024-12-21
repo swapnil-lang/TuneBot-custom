@@ -57,7 +57,7 @@ class MusicBot(commands.Bot):
                     f"`skip` (`s`) • Skip to next song\n"
                     f"`nowplaying` (`np`) • Show current song info\n"
                     f"`fast` (`f`, `ff`) • Skip ahead in current song\n"
-                    f"`disconnect` (`dis`, `leave`) • Leave channel"
+                    f"`disconnect` (`dis`) • Leave channel"
                 )
                 embed.add_field(name="🎮 Music Controls", value=playback, inline=False)
 
@@ -78,16 +78,6 @@ class MusicBot(commands.Bot):
                     f"`{ctx.prefix}ptn 3` • Play queue item #3"
                 )
                 embed.add_field(name="💡 Examples", value=examples, inline=False)
-
-                features = (
-                    "• YouTube and Spotify support\n"
-                    "• Search by name or URL\n"
-                    "• Fast forward in songs\n"
-                    "• Queue management\n"
-                    "• Live song progress\n"
-                    "• Loop mode"
-                )
-                embed.add_field(name="✨ Features", value=features, inline=False)
 
                 await ctx.send(embed=embed)
 
@@ -147,6 +137,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         pass
-    except Exception as e:
-        if os.path.exists('/tmp/healthy'):
-            os.remove('/tmp/healthy')
