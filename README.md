@@ -2,6 +2,17 @@
 
 A Discord music bot with advanced playback controls and Spotify integration.
 
+## Quick Start (Docker)
+1. Clone the repository
+  - `git clone xxx`
+2. Copy the example docker compose file
+  - `cp docker-compose.example.yml docker-compose.yml
+3. Add your credentials to the environment variables:
+  - Get Discord token from [Discord Developer Portal](https://discord.com/developers/applications)
+  - Get Spotify credentials from [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+4. Run the bot
+  - `docker-compose up -d`
+
 ## Features
 
 ### Music Controls
@@ -40,7 +51,3 @@ A Discord music bot with advanced playback controls and Spotify integration.
 - FFmpeg for audio processing
 - Async/await for non-blocking operations
 - SponsorBlock integration for skipping non-music segments
-
-## Setup
-
-1. Copy the example files:
