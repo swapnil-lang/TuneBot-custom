@@ -11,7 +11,7 @@ logger = logging.getLogger('discord')
 
 class MusicBot(commands.Bot):
     def __init__(self):
-        prefix = os.getenv('COMMAND_PREFIX', '..')
+        prefix = os.getenv('DISCORD_PREFIX', '/')
         intents = discord.Intents.default()
         intents.message_content = True
         intents.voice_states = True
