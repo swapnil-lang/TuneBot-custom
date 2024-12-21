@@ -4,7 +4,6 @@ import asyncio
 import time
 from async_timeout import timeout
 import logging
-from utils.highlights import HighlightHandler
 from utils.sponsorblock import SponsorBlockHandler
 
 # Configure logging
