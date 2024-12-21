@@ -198,8 +198,6 @@ class NowPlayingView:
                 next_info = [
                     "🎵 **Queue Status:**",
                     "📪 End of queue reached",
-                    "",
-                    "*Use ..play to add more tracks*"
                 ]
 
             embed.add_field(

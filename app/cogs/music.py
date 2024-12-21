@@ -180,7 +180,6 @@ class Music(commands.Cog):
             return await ctx.send("❌ No query provided.")
 
         try:
-            # If query is provided, always try to add to queue or play
             if self.bot.spotify_client.is_spotify_url(query):
                 await self.process_spotify_url(ctx, query)
                 return
@@ -196,10 +195,9 @@ class Music(commands.Cog):
                     duration_str = format_duration(source.duration)
                     embed = discord.Embed(
                         title="Added to Queue",
-                        description=f"**{source.title}**\nBy: {source.uploader}\nDuration: {duration_str}",
+                        description=f"**{source.title}**\nDuration: {duration_str}",
                         color=discord.Color.green()
                     )
-                    embed.set_thumbnail(url=source.thumbnail)
                     embed.set_footer(text=f"Requested by {ctx.author.display_name}")
                     await ctx.send(embed=embed)
                 else:
@@ -240,10 +238,9 @@ class Music(commands.Cog):
                     duration_str = format_duration(source.duration)
                     embed = discord.Embed(
                         title="Added to Play Next",
-                        description=f"**{source.title}**\nBy: {source.uploader}\nDuration: {duration_str}",
+                        description=f"**{source.title}**\nDuration: {duration_str}",
                         color=discord.Color.green()
                     )
-                    embed.set_thumbnail(url=source.thumbnail)
                     embed.set_footer(text=f"Requested by {ctx.author.display_name}")
                     await ctx.send(embed=embed)
                 else:
